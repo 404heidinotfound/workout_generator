@@ -1,0 +1,260 @@
+# Projektabgabe Workout-Generator
+
+import random # random Modul importieren für Zufallsgenerator
+import csv
+import os
+
+filename = r"C:\Users\Administrator\Documents\Programmieren mit Python\06_Project\exercises.csv"
+
+def load_exercises_from_csv(filename):
+    exercises = {}
+    with open(filename, "r", encoding="utf-8") as file:
+        reader = csv.DictReader(file)
+
+        for row in reader:
+            name = row["exercise"]
+            weight = row["weight"] if row["weight"] else None  # Gewicht, falls angegeben
+            scaling = row["scaling"] if row["scaling"] else None # Scaling, falls angegeben
+            # Kategorien (alle Spalten mit "x")
+            categories = []
+            if row["classic"] == "x":
+                categories.append("classic")
+            if row["conditioning"] == "x":
+                categories.append("conditioning")
+            if row["gymnastics"] == "x":
+                categories.append("gymnastics")
+            if row["oly"] == "x":
+                categories.append("oly")
+
+            benchmark = True if row["benchmark"] == "x" else False # Benchmark (Boolean)
+
+            exercises[name] = {  
+                "weight": weight,
+                "scaling": scaling,
+                "category": categories,
+                "benchmark": benchmark
+            }
+    return exercises
+
+# Einlesen
+exercises = load_exercises_from_csv(r"C:\Users\Administrator\Documents\Programmieren mit Python\06_Project\exercises.csv")
+
+cardio = ["Bike", "Row", "Ski Erg"] # bei diesen exercices muss meter oder calorie möglich sein
+running = ["Run"] # running ist sonderfall weil nur meter
+
+rep_ranges = { # wod rules für reps zählen
+    "conditioning": {"reps": [10, 15, 25, 30], "meters": [200, 400, 500, 1000], "calories": [10, 15, 25, 30]},
+    "classic": {"reps": [7, 9, 10, 12, 15, 18, 21]},
+    "gymnastics": {"reps": [3, 5, 8, 10, 12]},
+    "oly": {"reps": [1, 2, 3, 5]}
+}
+
+def filter_exercises_by_category(exercises, category): # Übungen nach Kategorie filtern
+    filtered = []
+    
+    for name, info in exercises.items(): # Prüfen ob die Kategorie in der liste steht
+        if category in info.get("category", []): 
+            filtered.append((name, info))
+    
+    return filtered
+
+def filter_benchmark_exercises(exercises): # Benchmark workouts filtern
+    benchmarks = []
+    for name, info in exercises.items():
+        if info.get("benchmark") == True:
+            benchmarks.append((name, info))
+    
+    return benchmarks
+
+def filter_exercises_by_category_no_benchmarks(exercises, category): # nicht-benchmarks filtern 
+        filtered = []
+        for name, info in exercises.items():
+            if category in info.get("category", []) and not info.get("benchmark"):
+                filtered.append((name, info))
+    
+        return filtered
+
+def generate_exercise_specs(exercise_name, exercise_info, category, level): #reps, gewichte, units für die Übungen generieren
+    result = {
+        "exercise": exercise_name,
+        "weight": None,
+        "reps": None,
+        "unit": "reps"  # default
+    }
+    
+    if category == "conditioning": # unit bestimmen (reps oder meters/calories)
+        if exercise_name in cardio: 
+            result["unit"] = random.choice(["meters", "calories"])
+            result["amount"] = random.choice(rep_ranges["conditioning"][result["unit"]])
+        elif exercise_name in running:
+            result["unit"] = "meters"
+            result["amount"] = random.choice(rep_ranges["conditioning"]["meters"])
+        else:
+            result["unit"] = "reps"
+            result["amount"] = random.choice(rep_ranges[category]["reps"])
+    else: # Other categories = only reps
+        result["unit"] = "reps"
+        result["amount"] = random.choice(rep_ranges[category]["reps"])
+
+    return result
+
+wod_rules = { # wod Regeln
+    "conditioning": {
+        "formats": ["EMOM", "AMRAP"],
+        "duration": (30, 40),  # Minutenbereich
+        "exercises": (4, 5)   # min 4, max 5
+    },
+    "gymnastics": {
+        "formats": ["EMOM", "For Quality"],
+        "duration": (12, 20),
+        "exercises": (3, 4),
+        "hint": "Scale reps according to your level, rest 1-2 minutes between rounds"
+    },
+    "classic": {
+        "formats": ["AMRAP", "EMOM", "For Time", "Rounds For Time"],
+        "duration": (10, 25),
+        "exercises": (2, 5),
+        "benchmark_chance": 0.2  # 20% Chance, ein Benchmark zu ziehen
+    },
+    "oly": {
+        "formats": ["5x5", "3x3", "Find 1RM", 
+                    "Every 30s for 15min", "EMOM 15min"],
+        "duration": None,  # nicht nötig
+        "exercises": (1, 1),
+        "hint": "Rest 1–2 minutes between sets"
+    }
+}
+
+def generate_wod(exercises, category):
+    rules = wod_rules[category]
+    if category == "classic": # Bei Classic: evtl. wird ein Benchmark gezogen
+        benchmarks = filter_benchmark_exercises(exercises)
+        if benchmarks and random.random() < rules.get("benchmark_chance", 0.2):
+            exercise_name, exercise_info = random.choice(benchmarks)
+            wod_text = f"\nYour workout of the day - WOD – from the category: CLASSIC (Benchmark)\n"
+            wod_text += f"Benchmark: {exercise_name}\n"
+            wod_text += "-"*40 + "\n"
+            wod_text += f"Scaling: {exercise_info["Scaling"] or "scale as needed"}\n"
+            return wod_text
+        
+    filtered = filter_exercises_by_category_no_benchmarks(exercises, category) # normale Übungsauswahl
+    if not filtered:
+        return "found no exercise in this category :("
+    min_ex, max_ex = rules["exercises"]
+    num_ex = random.randint(min_ex, max_ex)
+    chosen = random.sample(filtered, num_ex)
+
+    fmt = random.choice(rules["formats"])
+    duration = None
+    if rules["duration"]:
+        duration = random.randint(*rules["duration"])
+
+    specs_list = []
+    for exercise_name, exercise_info in chosen:
+        specs = generate_exercise_specs(exercise_name, exercise_info, category, level="rx")
+        if category != "oly":   # Oly darf KEIN Gewicht haben
+            specs["weight"] = exercise_info["weight"] or "n. a."
+        else:
+            specs["weight"] = "work with percentages according to your 1 rep max"
+        specs["scaling"] = exercise_info["scaling"] or "scale according to your level"
+        specs_list.append(specs)
+
+    # Textausgabe
+    wod_text = f"\nYour workout of the day (WOD) – from your chosen category: {category.upper()}\n"
+    wod_text += f"format: {fmt}\n"
+    if duration:
+        wod_text += f"duration: {duration} minutes\n"
+    wod_text += "-"*40 + "\n"
+
+    for s in specs_list:
+        wod_text += f"- {s['exercise']}: {s["amount"]} {s["unit"]} (weight: {s["weight"]}, scaling: {s["scaling"]})\n"
+
+    if "hint" in rules:
+        wod_text += f"\nadvice: {rules["hint"]}\n"
+
+    return wod_text
+
+def generate_plan(exercises, weeks=4, wods_per_week=3):
+    plan = "\n### Got you covered! Here's you 4 week training plan ###\n"
+    categories = ["classic", "conditioning", "gymnastics", "oly"]
+
+    for w in range(1, weeks+1):
+        plan += f"\nweek {w}\n" + "="*20 + "\n"
+        for d in range(1, wods_per_week+1):
+            cat = random.choice(categories)
+            wod = generate_wod(exercises, cat)
+            plan += f"\nday {d} – Category: {cat.upper()}\n{wod}\n"
+    return plan
+
+def save_plan_to_csv(exercises, filename="4_week_workout_plan.csv"):
+    categories = ["classic", "conditioning", "gymnastics", "oly"]
+    
+    with open(filename, "w", newline="", encoding="utf-8") as csvfile:
+        fieldnames = ["week", "day", "category", "format", "duration", "exercise", "amount", "unit", "weight"]
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        
+        writer.writeheader()
+        
+        for week in range(1, 5):  # 4 Wochen
+            for day in range(1, 4):  # 4 Tage pro Woche
+                category = random.choice(categories)
+                rules = wod_rules[category]
+                
+                if category == "classic":  # Benchmark-Check für Classic
+                    benchmarks = filter_benchmark_exercises(exercises)
+                    if benchmarks and random.random() < rules.get("benchmark_chance", 0.2):
+                        exercise_name, exercise_info = random.choice(benchmarks)
+                        writer.writerow({
+                            "week": week,
+                            "day": day,
+                            "category": "classic benchmark",
+                            "format": "benchmark",
+                            "duration": "",
+                            "exercise": exercise_name,
+                            "amount": '',
+                            "unit": "benchmark",
+                            "weight": ''
+                        })
+                        continue
+                
+                filtered = filter_exercises_by_category_no_benchmarks(exercises, category) # normale Übungen
+                min_ex, max_ex = rules["exercises"]
+                num_ex = random.randint(min_ex, max_ex)
+                chosen = random.sample(filtered, min(num_ex, len(filtered)))
+                
+                fmt = random.choice(rules["formats"])
+                duration = random.randint(*rules["duration"]) if rules["duration"] else ""
+                
+                for exercise_name, exercise_info in chosen:
+                    specs = generate_exercise_specs(exercise_name, exercise_info, category, level="rx")
+                    weight = exercise_info["weight"] if category != "oly" else "percentages"
+                    
+                    writer.writerow({
+                        "week": week,
+                        "day": day,
+                        "category": category,
+                        "format": fmt,
+                        "duration": duration,
+                        "exercise": exercise_name,
+                        "amount": specs["amount"],
+                        "unit": specs["unit"],
+                        "weight": weight or ""
+                    })
+    
+    print(f"4 week plan saved as: {filename}")
+    return filename
+
+
+def main(exercises):
+    choice = input("Do you want to create a workout of the day (WOD)? (yes/no): ").strip().lower()
+    if choice == "yes":
+        category = input("From which category? (classic, conditioning, gymnastics, oly): ").strip().lower()
+        print(generate_wod(exercises, category))
+    else:
+        csv_file = save_plan_to_csv(exercises)  # CSV erstellen statt printen
+        print("4-week plan created and saved!")
+
+
+# Programm starten
+if __name__ == "__main__":
+    main(exercises)

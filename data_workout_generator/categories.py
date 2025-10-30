@@ -1,0 +1,1 @@
+categories = ["classic", "oly", "gym", "condi"]

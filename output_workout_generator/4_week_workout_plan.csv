@@ -1,0 +1,39 @@
+week,day,category,format,duration,exercise,amount,unit,weight
+1,1,classic,EMOM,20,Front Squats,18,reps,50/35kg
+1,1,classic,EMOM,20,Overhead Squats,18,reps,
+1,1,classic,EMOM,20,Wall Balls,18,reps,9/6kg
+1,2,conditioning,AMRAP,38,Farmers Carry,25,reps,24/16kg
+1,2,conditioning,AMRAP,38,Thrusters,25,reps,
+1,2,conditioning,AMRAP,38,Box Jumps,30,reps,
+1,2,conditioning,AMRAP,38,Situps,30,reps,
+1,2,conditioning,AMRAP,38,Row,30,calories,
+1,3,gymnastics,EMOM,18,Handstand Pushups,12,reps,
+1,3,gymnastics,EMOM,18,V-ups,8,reps,
+1,3,gymnastics,EMOM,18,Ring Rows,10,reps,
+2,1,oly,Every 30s for 15min,,Front Squats,3,reps,percentages
+2,2,gymnastics,EMOM,20,Pullups,3,reps,
+2,2,gymnastics,EMOM,20,Wall Walks,8,reps,
+2,2,gymnastics,EMOM,20,Rope Climbs,3,reps,
+2,3,classic,For Time,17,Wall Balls,7,reps,9/6kg
+2,3,classic,For Time,17,Squat Cleans,12,reps,50/35kg
+2,3,classic,For Time,17,Muscle Ups,18,reps,
+2,3,classic,For Time,17,Power Cleans,12,reps,50/35kg
+3,1,classic,AMRAP,15,Burpee Box Jump Overs,10,reps,
+3,1,classic,AMRAP,15,Double Unders,12,reps,
+3,1,classic,AMRAP,15,Handstand Walk,12,reps,
+3,1,classic,AMRAP,15,Power Cleans,10,reps,50/35kg
+3,1,classic,AMRAP,15,T2B,7,reps,
+3,2,gymnastics,For Quality,13,Ring Dips,12,reps,
+3,2,gymnastics,For Quality,13,Pullups,12,reps,
+3,2,gymnastics,For Quality,13,V-ups,8,reps,
+3,3,classic,Rounds For Time,18,Bike Erg,9,reps,
+3,3,classic,Rounds For Time,18,Ring Rows,15,reps,
+4,1,oly,EMOM 15min,,Bulgarian Split Squats,5,reps,percentages
+4,2,conditioning,AMRAP,38,Box Jumps,10,reps,
+4,2,conditioning,AMRAP,38,Box Step Ups,30,reps,22.5/15kg
+4,2,conditioning,AMRAP,38,Air Squats,30,reps,
+4,2,conditioning,AMRAP,38,Run,1000,meters,
+4,3,gymnastics,For Quality,13,Rope Climbs,10,reps,
+4,3,gymnastics,For Quality,13,Handstand Walk,10,reps,
+4,3,gymnastics,For Quality,13,Muscle Ups,5,reps,
+4,3,gymnastics,For Quality,13,Wall Walks,5,reps,
